@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -9,7 +10,10 @@ db = SQLAlchemy(model_class=Base)
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app.config["SQLALCHEMY_DATABASE_URI"] =\
+        'sqlite:///' + os.path.join(basedir, 'database.db')
 
 db.init_app(app)
 
@@ -25,7 +29,7 @@ def tool_list():
     tools = db.session.execute(db.select(Tool).order_by(Tool.name)).scalar()
     return render_template("tool/list.html", tools=tools)
 
-@app.route("/tools/create", methods=["GET", "POST"])
+@app.route("/tools/add", methods=["GET", "POST"])
 def tool_create():
     if request.method == "POST":
         tool = tool(
