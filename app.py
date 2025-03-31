@@ -5,6 +5,27 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String
 
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(__name__)
+
+app.config['SQLALCHEMY_DATABASE_URI'] =\
+        'sqlite:///' + os.path.join(basedir, 'database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+if __name__ == '__main__':
+    app.run()
+
+@app.route("/")
+def hello_world():
+    return "<p>Hi, World!</p>"
+
+'''
 class Base(DeclarativeBase):
     pass
 db = SQLAlchemy(model_class=Base)
@@ -60,3 +81,4 @@ def tool_delete(id):
 @app.route("/")
 def hello_world():
     return "<p>Hi, World!</p>"
+'''
