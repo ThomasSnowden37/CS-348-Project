@@ -39,36 +39,21 @@ def add_tool():
                 db.session.commit()
             except:
                 return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
-            return redirect(url_for('handle_all_tool'))
+            return redirect(url_for('handle_new_tool'))
     if request.form.get('All Tools'):
         return redirect(url_for('handle_all_tool'))
     return render_template('add_tool.html', form = form)
-'''
-@app.route("/")
-def my_form():
-    return render_template('my-form.html')
-@app.route("/", methods=['POST'])
-def my_form_post():
-    text = request.form['text']
-    processed_text = text.upper()
-    return processed_text
 
-@app.route("/add_tool", methods=['POST'])
-def handle_add_tool():
-    name = request.json['name']
-    type = request.json['type']
-    loc = request.json['loc']
-    new_tool = Tool(
-        name = name,
-        type = type
-    )
-    db.session.add(new_tool)
-    db.session.commit()
-    return jsonify({"status": 1,
-                    "id": new_tool.id,
-                    "message": f"Item {new_tool.name} added successfully."
-                    }), 200
-'''
+@app.route("/new_tool", methods=['GET'])
+def handle_new_tool():
+    tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
+    tool_text = ''
+    tool_text = tool.name + ', ' + tool.type + '<br>'
+    return render_template('all_tools.html', tool_text = tool_text)
+@app.route("/new_tool", methods=['POST'])
+def new_tool_post():
+    return redirect(url_for('add_tool'))
+
 @app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
     tools = db.session.execute(db.select(Tool).
@@ -79,5 +64,5 @@ def handle_all_tool():
     #return tool_text
     return render_template('all_tools.html', tool_text = tool_text)
 @app.route("/get_all_tool", methods=['POST'])
-def my_form_post():
+def all_tool_post():
     return redirect(url_for('add_tool'))
