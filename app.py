@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+from wtforms import Form, BooleanField, StringField, PasswordField, validators
 from database import Tool, db, Location
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
