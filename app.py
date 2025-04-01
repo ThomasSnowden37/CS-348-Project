@@ -5,7 +5,7 @@ from database import Tool, db, Location
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, String, desc
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -28,8 +28,8 @@ class RegistrationForm(Form):
     name = StringField('name')
     type = StringField('type')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@app.route('/', methods=['GET', 'POST'])
+def add_tool():
     form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
         new_tool = Tool(name = form.name.data, type = form.type.data)
@@ -38,9 +38,9 @@ def register():
             db.session.commit()
         except:
             return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
-        return jsonify({'status': 1, 'message': f'Tool {form.name.data} creation successful!'}), 200
-    return render_template('register.html', form = form)
-
+        return redirect(url_for('handle_all_tool'))
+    return render_template('add_tool.html', form = form)
+'''
 @app.route("/")
 def my_form():
     return render_template('my-form.html')
@@ -65,7 +65,16 @@ def handle_add_tool():
                     "id": new_tool.id,
                     "message": f"Item {new_tool.name} added successfully."
                     }), 200
-
-@app.route("/tool", methods=['GET'])
-def handle_tool():
-    return render_template('my-form.html')
+'''
+@app.route("/get_all_tools", methods=['GET'])
+def handle_all_tool():
+    tools = db.session.execute(db.select(Tool).
+        order_by(desc(Tool.id))).scalars()
+    tool_text = ''
+    for tool in tools:
+        tool_text += tool.name + ', ' + tool.type + '<br>'
+    #return tool_text
+    return render_template('all_tools.html', tool_text = tool_text)
+@app.route("/tool", methods=['POST'])
+def my_form_post():
+    return redirect(url_for('add_tool'))
