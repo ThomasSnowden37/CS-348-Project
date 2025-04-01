@@ -31,13 +31,16 @@ class RegistrationForm(Form):
 @app.route('/', methods=['GET', 'POST'])
 def add_tool():
     form = RegistrationForm(request.form)
-    if request.method == 'POST' and form.validate():
-        new_tool = Tool(name = form.name.data, type = form.type.data)
-        try:
-            db.session.add(new_tool)
-            db.session.commit()
-        except:
-            return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
+    if request.form.get('Add'):
+        if request.method == 'POST' and form.validate():
+            new_tool = Tool(name = form.name.data, type = form.type.data)
+            try:
+                db.session.add(new_tool)
+                db.session.commit()
+            except:
+                return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
+            return redirect(url_for('handle_all_tool'))
+    if request.form.get('All Tools'):
         return redirect(url_for('handle_all_tool'))
     return render_template('add_tool.html', form = form)
 '''
@@ -66,7 +69,7 @@ def handle_add_tool():
                     "message": f"Item {new_tool.name} added successfully."
                     }), 200
 '''
-@app.route("/get_all_tools", methods=['GET'])
+@app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
     tools = db.session.execute(db.select(Tool).
         order_by(desc(Tool.id))).scalars()
@@ -75,6 +78,6 @@ def handle_all_tool():
         tool_text += tool.name + ', ' + tool.type + '<br>'
     #return tool_text
     return render_template('all_tools.html', tool_text = tool_text)
-@app.route("/tool", methods=['POST'])
+@app.route("/get_all_tool", methods=['POST'])
 def my_form_post():
     return redirect(url_for('add_tool'))
