@@ -1,0 +1,9 @@
+{% from "_formhelpers.html" import render_field %}
+<form method=post>
+  <dl>
+    {{ render_field(form.name) }}
+    {{ render_field(form.type) }}
+  </dl>
+  <p><input type=submit name=Add value=Add>
+  <p><input type=submit name='All Tools' value='All Tools'>
+</form>
