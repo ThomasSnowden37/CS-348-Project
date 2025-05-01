@@ -31,4 +31,7 @@ class Location(db.Model):
     name = db.Column(db.String(120))
     #tools = db.relationship('Tool', secondary = locationrel, primaryjoin=id == locationrel.c.loc_id,
         #secondaryjoin=id == locationrel.c.tool_id, backref = 'locationrel', lazy = 'dynamic')
+    def get_id(self):
+        #return the unique identifier for the location
+        return str(self.id)
     
