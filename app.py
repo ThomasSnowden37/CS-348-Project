@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
-from database import Tool, db, Location
+from database import Tool, db, Location, locationrel
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -39,17 +39,23 @@ def add_tool():
             new_location = Location(name = form.location.data)
             try:
                 db.session.add(new_tool)
+                new_tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
                 locations = db.session.execute(db.select(Location).
                     order_by(desc(Location.id))).scalars()
                 for location in locations:
                     if new_location.name == location.name:
+                        new_location = location
                         used = 1
+                        break
                 if used == 0:
                     try:
                         db.session.add(new_location)
+                        new_location = db.session.execute(db.select(Location).order_by(desc(Location.id))).scalars().first()
                     except:
                         return jsonify({'status': 0, 'message': 'Location could not be added to database.'}), 500
                 used = 0
+                rel = locationrel.insert().values(tool_id = new_tool.id, loc_id = new_location.id)
+                db.session.execute(rel)
                 db.session.commit()
             except:
                 return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
