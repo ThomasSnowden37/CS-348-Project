@@ -27,6 +27,7 @@ if __name__ == '__main__':
 class RegistrationForm(Form):
     name = StringField('name')
     type = StringField('type')
+    location = StringField('location')
 
 @app.route('/', methods=['GET', 'POST'])
 def add_tool():
@@ -34,8 +35,10 @@ def add_tool():
     if request.form.get('Add'):
         if request.method == 'POST' and form.validate():
             new_tool = Tool(name = form.name.data, type = form.type.data)
+            new_location = Location(name = form.location.data)
             try:
                 db.session.add(new_tool)
+                db.session.add(new_location)
                 db.session.commit()
             except:
                 return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
@@ -65,4 +68,17 @@ def handle_all_tool():
     return render_template('all_tools.html', tool_text = tool_text)
 @app.route("/get_all_tool", methods=['POST'])
 def all_tool_post():
+    return redirect(url_for('add_tool'))
+
+@app.route("/get_all_loc", methods=['GET'])
+def handle_all_loc():
+    locations = db.session.execute(db.select(Location).
+        order_by(desc(Location.id))).scalars()
+    loc_text = ''
+    for location in locations:
+        loc_text += location.name + '<br>'
+    #return tool_text
+    return render_template('all_tools.html', tool_text = loc_text)
+@app.route("/get_all_loc", methods=['POST'])
+def all_loc_post():
     return redirect(url_for('add_tool'))
