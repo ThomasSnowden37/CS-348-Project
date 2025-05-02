@@ -31,6 +31,7 @@ class RegistrationForm(Form):
 
 @app.route('/', methods=['GET', 'POST'])
 def add_tool():
+    used = 0
     form = RegistrationForm(request.form)
     if request.form.get('Add'):
         if request.method == 'POST' and form.validate():
@@ -38,7 +39,17 @@ def add_tool():
             new_location = Location(name = form.location.data)
             try:
                 db.session.add(new_tool)
-                db.session.add(new_location)
+                locations = db.session.execute(db.select(Location).
+                    order_by(desc(Location.id))).scalars()
+                for location in locations:
+                    if new_location.name == location.name:
+                        used = 1
+                if used == 0:
+                    try:
+                        db.session.add(new_location)
+                    except:
+                        return jsonify({'status': 0, 'message': 'Location could not be added to database.'}), 500
+                used = 0
                 db.session.commit()
             except:
                 return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
