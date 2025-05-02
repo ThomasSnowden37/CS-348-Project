@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
-from database import Tool, db, Location
+from database import Tool, db, Location, locationrel
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -27,15 +27,35 @@ if __name__ == '__main__':
 class RegistrationForm(Form):
     name = StringField('name')
     type = StringField('type')
+    location = StringField('location')
 
 @app.route('/', methods=['GET', 'POST'])
 def add_tool():
+    used = 0
     form = RegistrationForm(request.form)
     if request.form.get('Add'):
         if request.method == 'POST' and form.validate():
             new_tool = Tool(name = form.name.data, type = form.type.data)
+            new_location = Location(name = form.location.data)
             try:
                 db.session.add(new_tool)
+                new_tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
+                locations = db.session.execute(db.select(Location).
+                    order_by(desc(Location.id))).scalars()
+                for location in locations:
+                    if new_location.name == location.name:
+                        new_location = location
+                        used = 1
+                        break
+                if used == 0:
+                    try:
+                        db.session.add(new_location)
+                        new_location = db.session.execute(db.select(Location).order_by(desc(Location.id))).scalars().first()
+                    except:
+                        return jsonify({'status': 0, 'message': 'Location could not be added to database.'}), 500
+                used = 0
+                rel = locationrel.insert().values(tool_id = new_tool.id, loc_id = new_location.id)
+                db.session.execute(rel)
                 db.session.commit()
             except:
                 return jsonify({'status': 0, 'message': 'Tool could not be added to database.'}), 500
@@ -65,4 +85,17 @@ def handle_all_tool():
     return render_template('all_tools.html', tool_text = tool_text)
 @app.route("/get_all_tool", methods=['POST'])
 def all_tool_post():
+    return redirect(url_for('add_tool'))
+
+@app.route("/get_all_loc", methods=['GET'])
+def handle_all_loc():
+    locations = db.session.execute(db.select(Location).
+        order_by(desc(Location.id))).scalars()
+    loc_text = ''
+    for location in locations:
+        loc_text += location.name + '<br>'
+    #return tool_text
+    return render_template('all_tools.html', tool_text = loc_text)
+@app.route("/get_all_loc", methods=['POST'])
+def all_loc_post():
     return redirect(url_for('add_tool'))

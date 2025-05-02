@@ -21,6 +21,7 @@ class Tool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     type = db.Column(db.String(120))
+    
     def get_id(self):
         #return the unique identifier for the tool
         return str(self.id)
