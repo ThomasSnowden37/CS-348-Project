@@ -1,14 +1,16 @@
-{% for tool in tools %}
+{% for item in tools_with_locations %}
     <div>
-        {{ tool.name }}  <!-- Or whatever info you want to display -->
-        <form method="post" action="{{ url_for('delete_tool', tool_id=tool.id) }}" style="display:inline;">
+        {{ item.tool.name }} ({{ item.tool.type }}) -
+        Location: {{ item.location.name }}
+
+        <form method="post" action="{{ url_for('delete_tool', tool_id=item.tool.id) }}" style="display:inline;">
             <button type="submit" onclick="return confirm('Delete this tool?');">Delete</button>
-          </form>
+        </form>
     </div>
 {% endfor %}
 
 <br>
 
-<a href="{{ url_for('add_tool')}}">
+<a href="{{ url_for('add_tool') }}">
     <button type="button">Back</button>
 </a>

@@ -87,7 +87,7 @@ def handle_new_tool():
         .join(locationrel, locationrel.c.loc_id == Location.id)
         .where(locationrel.c.tool_id == tool.id)).scalars().first()
     tool_text = ''
-    tool_text = tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
+    tool_text = tool.name + ' (' + tool.type + ') - Location: ' + location.name + '<br>'
     return render_template('new_tool.html', tool_text = tool_text)
 @app.route("/new_tool", methods=['POST'])
 def new_tool_post():
@@ -95,16 +95,18 @@ def new_tool_post():
 
 @app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
-    tools = db.session.execute(db.select(Tool).
-        order_by(Tool.id)).scalars()
-    #tool_text = ''
-    #for tool in tools:
-        #location = db.session.execute(db.select(Location)
-        #.join(locationrel, locationrel.c.loc_id == Location.id)
-        #.where(locationrel.c.tool_id == tool.id)).scalars().first()
-        #tool_text += tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
-    #return tool_text
-    return render_template('all_tools.html', tools = tools)
+    stmt = (
+        db.select(Tool, Location)
+        .join(locationrel, Tool.id == locationrel.c.tool_id)
+        .join(Location, Location.id == locationrel.c.loc_id)
+    )
+    results = db.session.execute(stmt).all()
+
+    tools_with_locations = [
+        {"tool": tool, "location": location}
+        for tool, location in results
+    ]
+    return render_template('all_tools.html', tools_with_locations=tools_with_locations)
 @app.route("/get_all_tool", methods=['POST'])
 def all_tool_post():
     return redirect(url_for('add_tool'))
