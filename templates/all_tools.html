@@ -1,7 +1,14 @@
-{% from "_formhelpers.html" import render_field %}
-<form method=post>
-    {% autoescape false %}
-        {{tool_text}}
-    {% endautoescape %}
-  <p><input type=submit value=Ok>
-</form>
+{% for tool in tools %}
+    <div>
+        {{ tool.name }}  <!-- Or whatever info you want to display -->
+        <form method="post" action="{{ url_for('delete_tool', tool_id=tool.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this tool?');">Delete</button>
+          </form>
+    </div>
+{% endfor %}
+
+<br>
+
+<a href="{{ url_for('add_tool')}}">
+    <button type="button">Back</button>
+</a>

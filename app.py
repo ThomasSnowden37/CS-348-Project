@@ -74,7 +74,7 @@ def handle_new_tool():
         .where(locationrel.c.tool_id == tool.id)).scalars().first()
     tool_text = ''
     tool_text = tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
-    return render_template('all_tools.html', tool_text = tool_text)
+    return render_template('new_tool.html', tool_text = tool_text)
 @app.route("/new_tool", methods=['POST'])
 def new_tool_post():
     return redirect(url_for('add_tool'))
@@ -83,14 +83,14 @@ def new_tool_post():
 def handle_all_tool():
     tools = db.session.execute(db.select(Tool).
         order_by(Tool.id)).scalars()
-    tool_text = ''
-    for tool in tools:
-        location = db.session.execute(db.select(Location)
-        .join(locationrel, locationrel.c.loc_id == Location.id)
-        .where(locationrel.c.tool_id == tool.id)).scalars().first()
-        tool_text += tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
+    #tool_text = ''
+    #for tool in tools:
+        #location = db.session.execute(db.select(Location)
+        #.join(locationrel, locationrel.c.loc_id == Location.id)
+        #.where(locationrel.c.tool_id == tool.id)).scalars().first()
+        #tool_text += tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
     #return tool_text
-    return render_template('all_tools.html', tool_text = tool_text)
+    return render_template('all_tools.html', tools = tools)
 @app.route("/get_all_tool", methods=['POST'])
 def all_tool_post():
     return redirect(url_for('add_tool'))
@@ -99,11 +99,19 @@ def all_tool_post():
 def handle_all_loc():
     locations = db.session.execute(db.select(Location).
         order_by(Location.id)).scalars()
-    loc_text = ''
-    for location in locations:
-        loc_text += location.name + '<br>'
+    #loc_text = ''
+    #for location in locations:
+        #loc_text += location.name + '<br>'
     #return tool_text
-    return render_template('all_tools.html', tool_text = loc_text)
+    return render_template('all_tools.html', tools = locations)
 @app.route("/get_all_loc", methods=['POST'])
 def all_loc_post():
     return redirect(url_for('add_tool'))
+
+@app.route('/delete_tool/<int:tool_id>', methods=['POST'])
+def delete_tool(tool_id):
+    tool = db.session.get(Tool, tool_id)
+    if tool:
+        db.session.delete(tool)
+        db.session.commit()
+    return redirect(url_for('handle_all_tool'))
