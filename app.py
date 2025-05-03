@@ -5,8 +5,9 @@ from database import Tool, db, Location, locationrel
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, desc
-
+from sqlalchemy import Integer, String, desc, event
+from sqlalchemy.engine import Engine
+import sqlite3
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -17,6 +18,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] =\
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+@event.listens_for(Engine, "connect")
+def enforce_foreign_keys(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 migrate = Migrate(app, db)
 
 with app.app_context():
@@ -28,6 +36,12 @@ class RegistrationForm(Form):
     name = StringField('name')
     type = StringField('type')
     location = StringField('location')
+
+@event.listens_for(Engine, "connect")
+def enforce_foreign_keys(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 @app.route('/', methods=['GET', 'POST'])
 def add_tool():
