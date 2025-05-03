@@ -62,13 +62,18 @@ def add_tool():
             return redirect(url_for('handle_new_tool'))
     if request.form.get('All Tools'):
         return redirect(url_for('handle_all_tool'))
+    if request.form.get('All Locations'):
+        return redirect(url_for('handle_all_loc'))
     return render_template('add_tool.html', form = form)
 
 @app.route("/new_tool", methods=['GET'])
 def handle_new_tool():
     tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
+    location = db.session.execute(db.select(Location)
+        .join(locationrel, locationrel.c.loc_id == Location.id)
+        .where(locationrel.c.tool_id == tool.id)).scalars().first()
     tool_text = ''
-    tool_text = tool.name + ', ' + tool.type + '<br>'
+    tool_text = tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
     return render_template('all_tools.html', tool_text = tool_text)
 @app.route("/new_tool", methods=['POST'])
 def new_tool_post():
@@ -77,10 +82,13 @@ def new_tool_post():
 @app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
     tools = db.session.execute(db.select(Tool).
-        order_by(desc(Tool.id))).scalars()
+        order_by(Tool.id)).scalars()
     tool_text = ''
     for tool in tools:
-        tool_text += tool.name + ', ' + tool.type + '<br>'
+        location = db.session.execute(db.select(Location)
+        .join(locationrel, locationrel.c.loc_id == Location.id)
+        .where(locationrel.c.tool_id == tool.id)).scalars().first()
+        tool_text += tool.name + ', ' + tool.type + ', ' + location.name + '<br>'
     #return tool_text
     return render_template('all_tools.html', tool_text = tool_text)
 @app.route("/get_all_tool", methods=['POST'])
@@ -90,7 +98,7 @@ def all_tool_post():
 @app.route("/get_all_loc", methods=['GET'])
 def handle_all_loc():
     locations = db.session.execute(db.select(Location).
-        order_by(desc(Location.id))).scalars()
+        order_by(Location.id)).scalars()
     loc_text = ''
     for location in locations:
         loc_text += location.name + '<br>'
