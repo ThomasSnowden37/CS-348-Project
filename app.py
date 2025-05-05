@@ -192,6 +192,15 @@ def change_location_form(tool_id):
             db.session.execute(locationrel.insert().values(tool_id=tool.id, loc_id=int(new_loc_id)))
 
         db.session.commit()
-        return redirect(url_for('handle_all_tool'))
+        return redirect(request.form.get('next') or url_for('all_tools'))
 
     return render_template('change_location.html', tool=tool, locations=locations)
+
+@app.route('/location_tools/<int:loc_id>', methods=['GET', 'POST'])
+def location_tools(loc_id):
+    # Fetch location and associated tools
+    location = Location.query.get_or_404(loc_id)
+    tools = location.tools
+    tools_with_locations = [{'tool': t, 'location': location} for t in tools]
+    
+    return render_template('all_tools.html', tools_with_locations=tools_with_locations, location=location)

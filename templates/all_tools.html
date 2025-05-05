@@ -1,3 +1,17 @@
+{% if location %}
+    <h2>Tools at {{ location.name }}</h2>
+    <a href="{{ url_for('handle_all_loc') }}">
+        <button type="button">Back to Locations</button>
+    </a>
+{% else %}
+    <h2>All Tools</h2>
+    <a href="{{ url_for('add_tool') }}">
+        <button type="button">Back</button>
+    </a>
+{% endif %}
+
+<br><br>
+
 {% for item in tools_with_locations %}
     <div>
         {{ item.tool.name }} ({{ item.tool.type }}) -
@@ -16,9 +30,3 @@
         </form>
     </div>
 {% endfor %}
-
-<br>
-
-<a href="{{ url_for('add_tool') }}">
-    <button type="button">Back</button>
-</a>
