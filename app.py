@@ -1,9 +1,11 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from wtforms import Form, BooleanField, StringField, PasswordField, validators
+from wtforms import Form, BooleanField, StringField, PasswordField, validators, SelectField
+from wtforms.validators import DataRequired
 from database import Tool, db, Location, locationrel
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_wtf import FlaskForm
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, desc, event
 from sqlalchemy.engine import Engine
@@ -16,6 +18,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] =\
         'sqlite:///' + os.path.join(basedir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'pizza'
 
 db.init_app(app)
 @event.listens_for(Engine, "connect")
@@ -32,19 +35,21 @@ with app.app_context():
 if __name__ == '__main__':
     app.run()
 
-class RegistrationForm(Form):
-    name = StringField('name')
-    type = StringField('type')
-    location = StringField('location')
-
 @event.listens_for(Engine, "connect")
 def enforce_foreign_keys(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
+class ToolForm(FlaskForm):
+    name = StringField('Tool Name', validators=[DataRequired()])
+    type = StringField('Tool Type', validators=[DataRequired()])
+    location = StringField('Location', validators=[DataRequired()])
+
 @app.route('/', methods=['GET', 'POST'])
-def add_tool():
+def home():
+    form = ToolForm()
+    return render_template('add_tool.html', form = form)
     used = 0
     form = RegistrationForm(request.form)
     if request.form.get('Add'):
@@ -80,6 +85,43 @@ def add_tool():
         return redirect(url_for('handle_all_loc'))
     return render_template('add_tool.html', form = form)
 
+@app.route('/add_tool', methods=['GET', 'POST'])
+def add_tool():
+    form = ToolForm()
+    if form.validate_on_submit():
+        new_tool = Tool(name = form.name.data, type = form.type.data)
+        new_location = Location(name = form.location.data)
+
+        db.session.add(new_tool)
+        db.session.commit()
+        new_tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
+        locations = db.session.execute(db.select(Location).
+            order_by(desc(Location.id))).scalars()
+        for location in locations:
+            if new_location.name == location.name:
+                new_location = location
+                used = 1
+                break
+        if used == 0:
+            db.session.add(new_location)
+            new_location = db.session.execute(db.select(Location).order_by(desc(Location.id))).scalars().first()
+         
+        used = 0
+        rel = locationrel.insert().values(tool_id = new_tool.id, loc_id = new_location.id)
+        db.session.execute(rel)
+        db.session.commit()
+        return redirect(url_for('home'))
+    return redirect(url_for('home'))
+
+@app.route('/add_location', methods=['POST'])
+def add_location():
+    loc_name = request.form.get('loc_name')
+    if loc_name:
+        location = Location(name=loc_name)
+        db.session.add(location)
+        db.session.commit()
+    return redirect(url_for('add_tool'))
+
 @app.route("/new_tool", methods=['GET'])
 def handle_new_tool():
     tool = db.session.execute(db.select(Tool).order_by(desc(Tool.id))).scalars().first()
@@ -95,12 +137,9 @@ def new_tool_post():
 
 @app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
-    stmt = (
-        db.select(Tool, Location)
-        .join(locationrel, Tool.id == locationrel.c.tool_id)
-        .join(Location, Location.id == locationrel.c.loc_id)
-    )
-    results = db.session.execute(stmt).all()
+    results = db.session.execute(db.select(Tool, Location)
+        .outerjoin(locationrel, Tool.id == locationrel.c.tool_id)
+        .outerjoin(Location, Location.id == locationrel.c.loc_id)).all()
 
     tools_with_locations = [
         {"tool": tool, "location": location}
@@ -115,11 +154,8 @@ def all_tool_post():
 def handle_all_loc():
     locations = db.session.execute(db.select(Location).
         order_by(Location.id)).scalars()
-    #loc_text = ''
-    #for location in locations:
-        #loc_text += location.name + '<br>'
-    #return tool_text
-    return render_template('all_tools.html', tools = locations)
+    
+    return render_template('all_locs.html', locations = locations)
 @app.route("/get_all_loc", methods=['POST'])
 def all_loc_post():
     return redirect(url_for('add_tool'))
@@ -131,3 +167,31 @@ def delete_tool(tool_id):
         db.session.delete(tool)
         db.session.commit()
     return redirect(url_for('handle_all_tool'))
+
+@app.route('/delete_loc/<int:loc_id>', methods=['POST'])
+def delete_loc(loc_id):
+    location = db.session.get(Location, loc_id)
+    if location:
+        db.session.delete(location)
+        db.session.commit()
+    return redirect(url_for('handle_all_loc'))
+
+@app.route('/change_location/<int:tool_id>', methods=['GET', 'POST'])
+def change_location_form(tool_id):
+    tool = Tool.query.get_or_404(tool_id)
+    locations = Location.query.all()
+
+    if request.method == 'POST':
+        new_loc_id = request.form.get('loc_id')
+
+        # Delete existing locationrel entry
+        db.session.execute(locationrel.delete().where(locationrel.c.tool_id == tool.id))
+
+        # Add new one if selected
+        if new_loc_id:
+            db.session.execute(locationrel.insert().values(tool_id=tool.id, loc_id=int(new_loc_id)))
+
+        db.session.commit()
+        return redirect(url_for('handle_all_tool'))
+
+    return render_template('change_location.html', tool=tool, locations=locations)

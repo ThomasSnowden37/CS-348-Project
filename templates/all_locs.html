@@ -1,0 +1,19 @@
+{% for location in locations %}
+    <div>
+        {{ location.name }}
+
+        <a href="{{ url_for('location_tools', loc_id=location.id) }}">
+            <button type="button">Show All Tools at {{ location.name }}</button>
+        </a>
+
+        <form method="post" action="{{ url_for('delete_loc', loc_id=location.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this location?');">Delete</button>
+        </form>
+    </div>
+{% endfor %}
+
+<br>
+
+<a href="{{ url_for('add_tool') }}">
+    <button type="button">Back</button>
+</a>

@@ -1,0 +1,15 @@
+<h2>Change Location for "{{ tool.name }}"</h2>
+
+<form method="post">
+    <label for="loc_id">Select new location:</label>
+    <select name="loc_id" id="loc_id">
+        <option value="">-- None --</option>
+        {% for loc in locations %}
+            <option value="{{ loc.id }}">{{ loc.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Update</button>
+</form>
+
+<br>
+<a href="{{ url_for('handle_all_tool') }}"><button>Back</button></a>
