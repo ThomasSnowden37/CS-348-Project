@@ -88,6 +88,7 @@ def home():
 @app.route('/add_tool', methods=['GET', 'POST'])
 def add_tool():
     form = ToolForm()
+    used = 0
     if form.validate_on_submit():
         new_tool = Tool(name = form.name.data, type = form.type.data)
         new_location = Location(name = form.location.data)
