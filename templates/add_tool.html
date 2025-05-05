@@ -1,10 +1,35 @@
 {% from "_formhelpers.html" import render_field %}
-<form method=post>
-  <dl>
-    {{ render_field(form.name) }}
-    {{ render_field(form.type) }}
-    {{ render_field(form.location) }}
-  </dl>
-  <p><input type=submit name=Add value=Add>
-  <p><input type=submit name='All Tools' value='All Tools'>
-</form>
+<div style="display: flex; gap: 40px; align-items: flex-start;">
+
+  <!-- Tool Form -->
+  <div style="flex: 1;">
+      <h3>Add a Tool</h3>
+      <form method="post" action="{{ url_for('add_tool') }}">
+        {{ form.hidden_tag() }}
+        {{ form.name.label }}<br>{{ form.name() }}<br><br>
+        {{ form.type.label }}<br>{{ form.type() }}<br><br>
+        {{ form.location.label }}<br>{{ form.location() }}<br><br>
+          <input type="submit" value="Add Tool">
+      </form>
+      <a href="{{ url_for('handle_all_tool') }}">
+        <button type="button">View All Tools</button>
+    </a>
+  </div>
+
+  <!-- Location Form -->
+  <div style="flex: 1;">
+      <h3>Add a Location</h3>
+      <form method="post" action="{{ url_for('add_location') }}">
+        <div>  
+          <label for="loc_name">Location Name</label><br>
+          <input type="text" id="loc_name" name="loc_name" required>
+        </div>
+        <br>
+        <input type="submit" value="Add Location">
+      </form>
+      <a href="{{ url_for('handle_all_loc') }}">
+        <button type="button">View All Locations</button>
+    </a>
+  </div>
+
+</div>

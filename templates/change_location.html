@@ -1,0 +1,16 @@
+<h2>Change Location for "{{ tool.name }}"</h2>
+
+<form method="post" action="{{ url_for('change_location_form', tool_id=tool.id) }}">
+    <input type="hidden" name="next" value="{{ request.referrer }}">
+    <label for="loc_id">Select new location:</label>
+    <select name="loc_id" id="loc_id">
+        <option value="">-- None --</option>
+        {% for loc in locations %}
+            <option value="{{ loc.id }}">{{ loc.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Update</button>
+</form>
+
+<br>
+<button type="button" onclick="history.back()">Back</button>

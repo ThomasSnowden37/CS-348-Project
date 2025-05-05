@@ -1,7 +1,48 @@
-{% from "_formhelpers.html" import render_field %}
-<form method=post>
-    {% autoescape false %}
-        {{tool_text}}
-    {% endautoescape %}
-  <p><input type=submit value=Ok>
+{% if location %}
+    <h2>Tools at {{ location.name }}</h2>
+    <a href="{{ url_for('handle_all_loc') }}">
+        <button type="button">Back to Locations</button>
+    </a>
+{% else %}
+    <h2>All Tools</h2>
+    <a href="{{ url_for('add_tool') }}">
+        <button type="button">Back</button>
+    </a>
+{% endif %}
+
+<br><br>
+
+<form method="get">
+    <label for="sort">Sort by:</label>
+    <select name="sort" id="sort" onchange="this.form.submit()">
+        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+        <option value="type" {% if sort == 'type' %}selected{% endif %}>Type</option>
+        <option value="location" {% if sort == 'location' %}selected{% endif %}>Location</option>
+    </select>
+
+    <label for="order">Order:</label>
+    <select name="order" id="order" onchange="this.form.submit()">
+        <option value="asc" {% if order == 'asc' %}selected{% endif %}>A–Z</option>
+        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Z–A</option>
+    </select>
+
 </form>
+
+{% for item in tools_with_locations %}
+    <div>
+        {{ item.tool.name }} ({{ item.tool.type }}) -
+        {% if item.location %}
+            Location: {{ item.location.name }}
+        {% else %}
+            <em>No location</em>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('delete_tool', tool_id=item.tool.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this tool?');">Delete</button>
+        </form>
+
+        <form method="get" action="{{ url_for('change_location_form', tool_id=item.tool.id) }}" style="display:inline;">
+            <button type="submit">Change Location</button>
+        </form>
+    </div>
+{% endfor %}

@@ -1,0 +1,7 @@
+{% from "_formhelpers.html" import render_field %}
+<form method=post>
+    {% autoescape false %}
+        {{tool_text}}
+    {% endautoescape %}
+  <p><input type=submit value=Ok>
+</form>

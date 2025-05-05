@@ -1,0 +1,31 @@
+<h2>All Locations</h2>
+
+<form method="get">
+
+    <label for="order">Order:</label>
+    <select name="order" id="order" onchange="this.form.submit()">
+        <option value="asc" {% if order == 'asc' %}selected{% endif %}>A–Z</option>
+        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Z–A</option>
+    </select>
+
+</form>
+
+{% for location in locations %}
+    <div>
+        {{ location.name }}
+
+        <a href="{{ url_for('location_tools', loc_id=location.id) }}">
+            <button type="button">Show All Tools</button>
+        </a>
+
+        <form method="post" action="{{ url_for('delete_loc', loc_id=location.id) }}" style="display:inline;">
+            <button type="submit" onclick="return confirm('Delete this location?');">Delete</button>
+        </form>
+    </div>
+{% endfor %}
+
+<br>
+
+<a href="{{ url_for('add_tool') }}">
+    <button type="button">Back</button>
+</a>

@@ -21,6 +21,14 @@ class Tool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     type = db.Column(db.String(120))
+
+    locations = db.relationship(
+        'Location',
+        secondary=locationrel,
+        backref=db.backref('tools', lazy='dynamic'),
+        cascade="all, delete",
+        passive_deletes=True
+    )
     
     def get_id(self):
         #return the unique identifier for the tool
