@@ -12,6 +12,22 @@
 
 <br><br>
 
+<form method="get">
+    <label for="sort">Sort by:</label>
+    <select name="sort" id="sort" onchange="this.form.submit()">
+        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+        <option value="type" {% if sort == 'type' %}selected{% endif %}>Type</option>
+        <option value="location" {% if sort == 'location' %}selected{% endif %}>Location</option>
+    </select>
+
+    <label for="order">Order:</label>
+    <select name="order" id="order" onchange="this.form.submit()">
+        <option value="asc" {% if order == 'asc' %}selected{% endif %}>A–Z</option>
+        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Z–A</option>
+    </select>
+
+</form>
+
 {% for item in tools_with_locations %}
     <div>
         {{ item.tool.name }} ({{ item.tool.type }}) -

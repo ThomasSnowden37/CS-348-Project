@@ -137,25 +137,51 @@ def new_tool_post():
 
 @app.route("/get_all_tool", methods=['GET'])
 def handle_all_tool():
-    results = db.session.execute(db.select(Tool, Location)
-        .outerjoin(locationrel, Tool.id == locationrel.c.tool_id)
-        .outerjoin(Location, Location.id == locationrel.c.loc_id)).all()
+    sort = request.args.get('sort', 'name')  # default to name
+    order = request.args.get('order', 'asc')    # Default: ascending
 
-    tools_with_locations = [
-        {"tool": tool, "location": location}
-        for tool, location in results
-    ]
-    return render_template('all_tools.html', tools_with_locations=tools_with_locations)
+    tools = Tool.query.all()
+    tools_with_locations = []
+
+    for tool in tools:
+        location = tool.locations[0] if tool.locations else None
+        tools_with_locations.append({'tool': tool, 'location': location})
+
+    reverse = (order == 'desc')
+
+    if sort == 'name':
+        tools_with_locations.sort(key=lambda x: x['tool'].name.lower(), reverse = reverse)
+    elif sort == 'type':
+        tools_with_locations.sort(key=lambda x: x['tool'].type.lower(), reverse = reverse)
+    elif sort == 'location':
+        tools_with_locations.sort(
+            key=lambda x: x['location'].name.lower() if x['location'] else '', reverse = reverse
+        )
+
+    return render_template(
+        'all_tools.html',
+        tools_with_locations = tools_with_locations,
+        sort = sort,
+        order = order
+    )
 @app.route("/get_all_tool", methods=['POST'])
 def all_tool_post():
     return redirect(url_for('add_tool'))
 
 @app.route("/get_all_loc", methods=['GET'])
 def handle_all_loc():
-    locations = db.session.execute(db.select(Location).
-        order_by(Location.id)).scalars()
-    
-    return render_template('all_locs.html', locations = locations)
+    order = request.args.get('order', 'asc')
+    reverse = (order == 'desc')
+
+    locations = Location.query.order_by(Location.name.asc()).all()
+
+    locations.sort(key=lambda x: x.name.lower(), reverse=reverse)
+
+    return render_template(
+        'all_locs.html',
+        locations = locations,
+        order = order
+    )
 @app.route("/get_all_loc", methods=['POST'])
 def all_loc_post():
     return redirect(url_for('add_tool'))
@@ -199,8 +225,27 @@ def change_location_form(tool_id):
 @app.route('/location_tools/<int:loc_id>', methods=['GET', 'POST'])
 def location_tools(loc_id):
     # Fetch location and associated tools
+    sort = request.args.get('sort', 'name')  # default to name
+    order = request.args.get('order', 'asc')    # Default: ascending
     location = Location.query.get_or_404(loc_id)
     tools = location.tools
     tools_with_locations = [{'tool': t, 'location': location} for t in tools]
+
+    reverse = (order == 'desc')
+
+    if sort == 'name':
+        tools_with_locations.sort(key=lambda x: x['tool'].name.lower(), reverse = reverse)
+    elif sort == 'type':
+        tools_with_locations.sort(key=lambda x: x['tool'].type.lower(), reverse = reverse)
+    elif sort == 'location':
+        tools_with_locations.sort(
+            key=lambda x: x['location'].name.lower() if x['location'] else '', reverse = reverse
+        )
     
-    return render_template('all_tools.html', tools_with_locations=tools_with_locations, location=location)
+    return render_template(
+        'all_tools.html',
+        tools_with_locations = tools_with_locations,
+        location = location,
+        sort = sort,
+        order = order
+    )

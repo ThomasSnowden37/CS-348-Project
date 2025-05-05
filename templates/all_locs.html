@@ -1,3 +1,15 @@
+<h2>All Locations</h2>
+
+<form method="get">
+
+    <label for="order">Order:</label>
+    <select name="order" id="order" onchange="this.form.submit()">
+        <option value="asc" {% if order == 'asc' %}selected{% endif %}>A–Z</option>
+        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Z–A</option>
+    </select>
+
+</form>
+
 {% for location in locations %}
     <div>
         {{ location.name }}
